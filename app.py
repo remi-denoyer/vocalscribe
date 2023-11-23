@@ -1,81 +1,22 @@
 from flask import Flask, jsonify, request, render_template
 import requests
 from io import BytesIO
-import speech_recognition as sr
-from pydub import AudioSegment
 import os
 from celery_utils import make_celery
+from tasks import transcribe_and_respond
 from dotenv import load_dotenv
-
-# Load environment variables before initializing the app
-
+from functions import send_messenger
 
 load_dotenv()
 
 app = Flask(__name__)
 app.config.update(
-    result_backend=os.getenv("REDIS_URL", "redis://localhost:6379/0"),
-    broker_url=os.getenv("REDIS_URL", "redis://localhost:6379/0"),
-    broker_connection_retry_on_startup=True
+    broker_url=os.getenv("REDIS_URL"),
+    result_backend=os.getenv("REDIS_URL"),
+    broker_connection_retry_on_startup=True,
 )
 
 celery = make_celery(app)
-
-# Load environment variables
-load_dotenv()
-
-
-def send_messenger(recipient_id, message_text):
-    url = "https://graph.facebook.com/v18.0/174174782446443/messages"
-    payload = {
-        "recipient": {"id": recipient_id},
-        "message": {"text": message_text},
-        "messaging_type": "RESPONSE",
-    }
-    params = {"access_token": os.getenv("ACCESS_TOKEN")}
-
-    response = requests.post(url, json=payload, params=params)
-    return response.json()
-
-
-def transcribe_from_url(file_url):
-    audio_format = "mp4"
-
-    try:
-        # Download the audio file from the URL
-        audio_response = requests.get(file_url)
-        audio_response.raise_for_status()
-
-        # Convert the audio file to WAV format
-        audio_stream = BytesIO(audio_response.content)
-        original_audio = AudioSegment.from_file(audio_stream, format=audio_format)
-        audio_stream = BytesIO()
-        original_audio.export(audio_stream, format="wav")
-
-        # Reset the stream position to the beginning for further processing
-        audio_stream.seek(0)
-
-        # Initialize the recognizer and transcribe
-        r = sr.Recognizer()
-        with sr.AudioFile(audio_stream) as source:
-            audio = r.record(source)
-            transcription = r.recognize_google(
-                audio,
-                language="fr-FR",
-                enableAutomaticPunctuation=True,
-                enableSpokenPunctuation=True,
-                alternativeLanguageCodes=["en", "es", "it"],
-            )
-
-        return transcription
-
-    except requests.RequestException as e:
-        raise Exception(f"Error fetching file: {e}")
-    except Exception as e:
-        raise Exception(f"Error processing audio: {e}")
-
-
-app = Flask(__name__)
 
 
 @app.route("/privacy-policy")
@@ -118,7 +59,6 @@ def messenger_webhook():
 
                     if audio_attachment:
                         file_url = audio_attachment["payload"]["url"]
-
                         # Send an acknowledgment message
                         send_messenger(
                             sender_id,
@@ -135,18 +75,6 @@ def messenger_webhook():
                         )
 
         return jsonify(success=True), 200
-
-
-@celery.task
-def transcribe_and_respond(file_url, recipient_id):
-    try:
-        transcription = transcribe_from_url(file_url)
-        if transcription:
-            send_messenger(recipient_id, transcription)
-        else:
-            send_messenger(recipient_id, "Sorry, unable to transcribe the audio.")
-    except Exception as e:
-        send_messenger(recipient_id, f"Error during transcription: {e}")
 
 
 if __name__ == "__main__":
