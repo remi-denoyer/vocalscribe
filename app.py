@@ -14,8 +14,9 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config.update(
-    CELERY_BROKER_URL=os.getenv("REDIS_URL", "redis://localhost:6379/0"),
-    CELERY_RESULT_BACKEND=os.getenv("REDIS_URL", "redis://localhost:6379/0"),
+    result_backend=os.getenv("REDIS_URL", "redis://localhost:6379/0"),
+    broker_url=os.getenv("REDIS_URL", "redis://localhost:6379/0"),
+    broker_connection_retry_on_startup=True
 )
 
 celery = make_celery(app)
@@ -59,7 +60,11 @@ def transcribe_from_url(file_url):
         with sr.AudioFile(audio_stream) as source:
             audio = r.record(source)
             transcription = r.recognize_google(
-                audio, language="fr-FR"
+                audio,
+                language="fr-FR",
+                enableAutomaticPunctuation=True,
+                enableSpokenPunctuation=True,
+                alternativeLanguageCodes=["en", "es", "it"],
             )
 
         return transcription
