@@ -5,7 +5,7 @@ import os
 from celery_utils import make_celery
 from tasks import transcribe_and_respond
 from dotenv import load_dotenv
-from functions import send_messenger
+from functions import send_messenger, generate_gpt_response
 
 load_dotenv()
 
@@ -45,34 +45,37 @@ def messenger_webhook():
         payload = request.json
         print("Received webhook:", payload)
 
-        # Enqueue transcription tasks without waiting for them to complete
         for event in payload.get("entry", []):
             messaging = event.get("messaging", [])
             for message in messaging:
                 sender_id = message["sender"]["id"]
-                if message.get("message"):
+
+                # Check for text messages and respond with GPT
+                if message.get("message") and "text" in message["message"]:
+                    user_message = message["message"]["text"]
+                    gpt_response = generate_gpt_response(user_message)
+                    send_messenger(sender_id, gpt_response)
+
+                # Check for audio attachments
+                elif message.get("message"):
                     attachments = message["message"].get("attachments", [])
                     audio_attachment = next(
-                        (a for a in attachments if a.get("type") == "audio"),
-                        None,
+                        (a for a in attachments if a.get("type") == "audio"), None
                     )
 
                     if audio_attachment:
                         file_url = audio_attachment["payload"]["url"]
-                        # Send an acknowledgment message
-                        send_messenger(
-                            sender_id,
-                            "Received your vocal message, transcribing now...",
-                        )
+                        # Generate and send an acknowledgment message using GPT
+                        send_messenger(sender_id, "...")
 
                         # Enqueue the transcription task
                         transcribe_and_respond.delay(file_url, sender_id)
                     else:
-                        # For non-audio messages, send a polite refusal
-                        send_messenger(
-                            sender_id,
-                            "I currently only support vocal transcription. Please send an audio message.",
+                        # Generate and send a message for non-audio attachments using GPT
+                        non_audio_message = generate_gpt_response(
+                            "NON_AUDIO_FILE"
                         )
+                        send_messenger(sender_id, non_audio_message)
 
         return jsonify(success=True), 200
 
