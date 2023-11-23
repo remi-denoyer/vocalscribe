@@ -74,5 +74,24 @@ def terms_of_service():
     return render_template("terms_of_service.html")
 
 
+@app.route("/messenger", methods=["GET", "POST"])
+def messenger_webhook():
+    # Verification step for Facebook webhook setup
+    if request.method == "GET":
+        verify_token = request.args.get("hub.verify_token")
+        challenge = request.args.get("hub.challenge")
+
+        # Use your own verify token here
+        if verify_token == os.getenv("WEBHOOK_TOKEN"):
+            return challenge, 200
+        return "Verification token mismatch", 403
+
+    # Handling POST requests (actual webhook events)
+    elif request.method == "POST":
+        payload = request.json
+        print("Received webhook:", payload)
+        return jsonify(success=True), 200
+
+
 if __name__ == "__main__":
     app.run(debug=True)
