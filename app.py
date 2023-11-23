@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 import requests
 from io import BytesIO
 import speech_recognition as sr
@@ -11,18 +11,18 @@ load_dotenv()
 
 app = Flask(__name__)
 
-@app.route('/transcribe', methods=['GET'])
-def transcribe():
 
-    audio_format = 'mp4'
+@app.route("/transcribe", methods=["GET"])
+def transcribe():
+    audio_format = "mp4"
 
     # Get messageId from query parameter
-    message_id = request.args.get('messageId')
+    message_id = request.args.get("messageId")
     if not message_id:
         return jsonify({"error": "No messageId provided"}), 400
 
     # Load the access token from .env
-    access_token = os.getenv('ACCESS_TOKEN')
+    access_token = os.getenv("ACCESS_TOKEN")
     graph_api_url = f"https://graph.facebook.com/v18.0/{message_id}/attachments?access_token={access_token}"
 
     try:
@@ -41,9 +41,11 @@ def transcribe():
 
         # Convert the audio file to WAV format
         audio_stream = BytesIO(audio_response.content)
-        original_audio = AudioSegment.from_file(audio_stream, format="mp4")  # Format without the dot
+        original_audio = AudioSegment.from_file(
+            audio_stream, format="mp4"
+        )  # Format without the dot
         audio_stream = BytesIO()
-        original_audio.export(audio_stream, format='wav')
+        original_audio.export(audio_stream, format="wav")
 
         # Reset the stream position to the beginning for further processing
         audio_stream.seek(0)
@@ -52,7 +54,7 @@ def transcribe():
         r = sr.Recognizer()
         with sr.AudioFile(audio_stream) as source:
             audio = r.record(source)
-            transcription = r.recognize_google(audio, language='fr-FR')
+            transcription = r.recognize_google(audio, language="fr-FR")
 
         return jsonify({"transcription": transcription})
 
@@ -61,5 +63,16 @@ def transcribe():
     except Exception as e:
         return jsonify({"error": f"Error processing audio: {e}"}), 500
 
-if __name__ == '__main__':
+
+@app.route("/privacy-policy")
+def privacy_policy():
+    return render_template("privacy_policy.html")
+
+
+@app.route("/terms-of-service")
+def terms_of_service():
+    return render_template("terms_of_service.html")
+
+
+if __name__ == "__main__":
     app.run(debug=True)
