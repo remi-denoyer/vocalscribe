@@ -1,6 +1,7 @@
 import requests
 import os
 from dotenv import load_dotenv
+from services.email import send_messenger_from_email
 
 base_url = "https://graph.facebook.com/v18.0/"
 
@@ -9,6 +10,7 @@ access_token = os.getenv("ACCESS_TOKEN")
 
 
 def send_messenger(recipient_id, message_text):
+    return send_messenger_from_email(recipient_id, message_text)
     url = f"{base_url}/174174782446443/messages"
     params = {"access_token": access_token}
     MAX_MESSAGE_LENGTH = 2000
@@ -46,13 +48,8 @@ def get_messenger_message_payload(message_id):
         "message": {
             "mid": message_data.get("id"),
             "text": message_data.get("message"),
-            "attachments": [],
+            "attachments": message_data.get("attachments", {}).get("data", []),
         },
     }
-    if "attachments" in message_data:
-        message_payload["message"]["attachments"] = [
-            {"type": attachment["type"], "payload": attachment["payload"]}
-            for attachment in message_data["attachments"]
-        ]
 
     return message_payload

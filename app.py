@@ -60,32 +60,30 @@ def on_messenger_message():
     if not payload["id"]:
         return "Unprocessable message", 400
     message = get_messenger_message_payload(message_id)
-    return process_messenger_message(message)
+    process_messenger_message(message)
+    return jsonify(success=True), 200
 
 
 # Should be abstracted to support other messaging platforms
 def process_messenger_message(message):
     sender_id = message["sender"]["id"]
     # Check for text messages and respond with GPT
-    if message.get("message") and "text" in message["message"]:
-        user_message = message["message"]["text"]
-        gpt_response = generate_gpt_response(user_message)
-        send_messenger(sender_id, gpt_response)
-
-    # Check for audio attachments
-    elif message.get("message"):
+    if message.get("message"):
         attachments = message["message"].get("attachments", [])
         audio_attachment = next(
-            (a for a in attachments if a.get("type") == "audio"), None
+            (attachment for attachment in attachments if '.mp4' in attachment.get("name")), None
         )
-
         if audio_attachment:
-            file_url = audio_attachment["payload"]["url"]
+            file_url = audio_attachment.get("file_url", audio_attachment.get("payload", {}).get("url", None))
             # Generate and send an acknowledgment message
             send_messenger(sender_id, "...")
 
             # Enqueue the transcription task
             transcribe_and_respond.delay(file_url, sender_id)
+        elif len(message["message"].get("text", '')) > 0:
+            user_message = message["message"]["text"]
+            gpt_response = generate_gpt_response(user_message)
+            send_messenger(sender_id, gpt_response)
         else:
             # Generate and send a message for non-audio attachments using GPT
             non_audio_message = generate_gpt_response("NON_AUDIO_FILE")

@@ -60,7 +60,6 @@ def generate_gpt_response(prompt):
                 {"role": "user", "content": prompt},
             ],
         )
-        print(completion)
         return completion.choices[0].message.content
     except Exception as e:
         print(f"Error in generating response: {e}")
