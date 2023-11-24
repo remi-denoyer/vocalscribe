@@ -3,10 +3,9 @@ import requests
 from io import BytesIO
 import os
 from celery_utils import make_celery
-from tasks import transcribe_and_respond
+from tasks import transcribe_and_respond_task, generate_gpt_response_task
 from dotenv import load_dotenv
 from services.messenger import send_messenger, get_messenger_message_payload
-from services.openai import generate_gpt_response
 
 load_dotenv()
 
@@ -83,7 +82,7 @@ def process_messenger_message(message):
                 "file_url", audio_attachment.get("payload", {}).get("url", None)
             )
             send_messenger(sender_id, "...")
-            transcribe_and_respond.delay(file_url, sender_id)
+            transcribe_and_respond_task.delay(file_url, sender_id)
         elif len(message["message"].get("text", "")) > 0:
             user_message = message["message"]["text"]
             generate_gpt_response_task.delay(user_message, sender_id)

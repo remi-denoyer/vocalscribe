@@ -4,7 +4,7 @@ from services.openai import transcribe_from_url, generate_gpt_response
 
 
 @shared_task
-def transcribe_and_respond(file_url, recipient_id):
+def transcribe_and_respond_task(file_url, recipient_id):
     try:
         transcription = transcribe_from_url(file_url)
         if transcription:

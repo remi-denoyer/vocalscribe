@@ -10,7 +10,6 @@ access_token = os.getenv("ACCESS_TOKEN")
 
 
 def send_messenger(recipient_id, message_text):
-    return send_messenger_from_email(recipient_id, message_text)
     url = f"{base_url}/174174782446443/messages"
     params = {"access_token": access_token}
     MAX_MESSAGE_LENGTH = 2000
@@ -26,14 +25,15 @@ def send_messenger(recipient_id, message_text):
 
         # Send each chunk as a separate message
         try:
-            response = requests.post(url, json=payload, params=params)
-            response.raise_for_status()
-            responses.append(response.json())
+            send_messenger_from_email(recipient_id, chunk)
+            # response = requests.post(url, json=payload, params=params)
+            # response.raise_for_status()
+            # responses.append(response.json())
         except Exception as e:
             print(f"Error in sending messenger: {e}")
             raise
 
-    return responses
+    # return responses
 
 
 def get_messenger_message_payload(message_id):
