@@ -1,6 +1,7 @@
 from celery import shared_task
+
 from services.messenger import send_messenger
-from services.openai import transcribe_from_url, generate_gpt_response
+from services.openai import generate_gpt_response, transcribe_from_url
 
 
 @shared_task
@@ -10,7 +11,8 @@ def transcribe_and_respond_task(file_url, recipient_id):
         if transcription:
             send_messenger(recipient_id, transcription)
         else:
-            send_messenger(recipient_id, "Sorry, unable to transcribe the audio.")
+            send_messenger(recipient_id,
+                           "Sorry, unable to transcribe the audio.")
     except Exception as e:
         send_messenger(recipient_id, f"Error during transcription: {e}")
 

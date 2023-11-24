@@ -16,3 +16,6 @@ redis==4.1.1
 requests==2.31.0
 urllib3==2.1.0
 Werkzeug==3.0.1
+flake8==6.1.0
+pre_commit==3.5.0
+autopep8==2.0.4

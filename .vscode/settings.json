@@ -1,0 +1,11 @@
+{
+    "python.linting.enabled": true,
+    "python.linting.flake8Enabled": true,
+    "python.formatting.provider": "autopep8",
+    "editor.codeActionsOnSave": {
+        "source.fixAll": true
+    },
+    "files.autoSave": "onFocusChange",
+    "python.linting.lintOnSave": true,
+    "files.trimTrailingWhitespace": true,
+}

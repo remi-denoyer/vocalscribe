@@ -1,11 +1,11 @@
-from flask import Flask, jsonify, request, render_template
-import requests
-from io import BytesIO
 import os
-from celery_utils import make_celery
-from tasks import transcribe_and_respond_task, generate_gpt_response_task
+
 from dotenv import load_dotenv
-from services.messenger import send_messenger, get_messenger_message_payload
+from flask import Flask, jsonify, render_template, request
+
+from celery_utils import make_celery
+from services.messenger import get_messenger_message_payload, send_messenger
+from tasks import generate_gpt_response_task, transcribe_and_respond_task
 
 load_dotenv()
 
@@ -79,7 +79,8 @@ def process_messenger_message(message):
         )
         if audio_attachment:
             file_url = audio_attachment.get(
-                "file_url", audio_attachment.get("payload", {}).get("url", None)
+                "file_url",
+                audio_attachment.get("payload", {}).get("url", None)
             )
             send_messenger(sender_id, "...")
             transcribe_and_respond_task.delay(file_url, sender_id)

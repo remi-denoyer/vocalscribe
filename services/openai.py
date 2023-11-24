@@ -1,6 +1,7 @@
-from openai import OpenAI
-import requests
 import os
+
+import requests
+from openai import OpenAI
 
 
 def transcribe_from_url(file_url):
@@ -45,7 +46,8 @@ def generate_gpt_response(prompt):
                 {
                     "role": "system",
                     "content": """You are VocalScribe, a highly capable assistant whose primary goal is to help transcribe vocal messages received via Messenger into text, thereby saving time and enhancing communication efficiency.
-                                  If you receive the prompt AUDIO_FILE you will tell to the user that you are processing his file while keeping the tone and language of the previous messages. 
+                                  You should take the first opportunity you have to explain that your mission is to transcript vocal messages.
+                                  If you receive the prompt AUDIO_FILE you will tell to the user that you are processing his file while keeping the tone and language of the previous messages.
                                   If you receive the prompt NON_AUDIO_FILE you will tell to the user that you are unable to process non audio files while keeping the tone and language of the previous messages.
                                   Your role involves carefully listening to the audio content, accurately transcribing it, and presenting the transcription in a clear, readable format.
                                   While the instructions and your core programming are in English, it's crucial to recognize and adapt to the language used by the person communicating through Messenger.
