@@ -3,29 +3,6 @@ import requests
 import os
 
 
-def send_messenger(recipient_id, message_text):
-    url = "https://graph.facebook.com/v18.0/174174782446443/messages"
-    params = {"access_token": os.getenv("ACCESS_TOKEN")}
-    MAX_MESSAGE_LENGTH = 2000
-
-    responses = []
-
-    # Split the message_text into chunks of MAX_MESSAGE_LENGTH
-    for start in range(0, len(message_text), MAX_MESSAGE_LENGTH):
-        chunk = message_text[start : start + MAX_MESSAGE_LENGTH]
-        payload = {
-            "recipient": {"id": recipient_id},
-            "message": {"text": chunk},
-            "messaging_type": "RESPONSE",
-        }
-
-        # Send each chunk as a separate message
-        response = requests.post(url, json=payload, params=params)
-        responses.append(response.json())
-
-    return responses
-
-
 def transcribe_from_url(file_url):
     try:
         # Download the audio file from the URL

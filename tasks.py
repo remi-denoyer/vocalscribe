@@ -1,5 +1,6 @@
 from celery import shared_task
-from functions import send_messenger, transcribe_from_url
+from services.messenger import send_messenger
+from services.openai import transcribe_from_url
 
 
 @shared_task
