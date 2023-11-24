@@ -71,23 +71,24 @@ def process_messenger_message(message):
     if message.get("message"):
         attachments = message["message"].get("attachments", [])
         audio_attachment = next(
-            (attachment for attachment in attachments if '.mp4' in attachment.get("name")), None
+            (
+                attachment
+                for attachment in attachments
+                if ".mp4" in attachment.get("name")
+            ),
+            None,
         )
         if audio_attachment:
-            file_url = audio_attachment.get("file_url", audio_attachment.get("payload", {}).get("url", None))
-            # Generate and send an acknowledgment message
+            file_url = audio_attachment.get(
+                "file_url", audio_attachment.get("payload", {}).get("url", None)
+            )
             send_messenger(sender_id, "...")
-
-            # Enqueue the transcription task
             transcribe_and_respond.delay(file_url, sender_id)
-        elif len(message["message"].get("text", '')) > 0:
+        elif len(message["message"].get("text", "")) > 0:
             user_message = message["message"]["text"]
-            gpt_response = generate_gpt_response(user_message)
-            send_messenger(sender_id, gpt_response)
+            generate_gpt_response_task.delay(user_message, sender_id)
         else:
-            # Generate and send a message for non-audio attachments using GPT
-            non_audio_message = generate_gpt_response("NON_AUDIO_FILE")
-            send_messenger(sender_id, non_audio_message)
+            generate_gpt_response_task.delay("NON_AUDIO_FILE", sender_id)
     return jsonify(success=True), 200
 
 
