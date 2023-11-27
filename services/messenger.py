@@ -1,6 +1,8 @@
-import requests
 import os
+
+import requests
 from dotenv import load_dotenv
+
 from services.email import send_messenger_from_email
 
 base_url = "https://graph.facebook.com/v18.0/"
@@ -9,11 +11,10 @@ load_dotenv()
 access_token = os.getenv("ACCESS_TOKEN")
 
 
-def send_messenger(recipient_id, message_text):
+def send_messenger(recipient_id, message_text, is_enabled=False):
     url = f"{base_url}/174174782446443/messages"
     params = {"access_token": access_token}
     MAX_MESSAGE_LENGTH = 2000
-    responses = []
     # Split the message_text into chunks of MAX_MESSAGE_LENGTH
     for start in range(0, len(message_text), MAX_MESSAGE_LENGTH):
         chunk = message_text[start : start + MAX_MESSAGE_LENGTH]
@@ -25,15 +26,15 @@ def send_messenger(recipient_id, message_text):
 
         # Send each chunk as a separate message
         try:
-            send_messenger_from_email(recipient_id, chunk)
-            # response = requests.post(url, json=payload, params=params)
-            # response.raise_for_status()
-            # responses.append(response.json())
+            if is_enabled:
+                response = requests.post(url, json=payload, params=params)
+                response.raise_for_status()
+            else:
+                send_messenger_from_email(recipient_id, chunk)
+
         except Exception as e:
             print(f"Error in sending messenger: {e}")
             raise
-
-    # return responses
 
 
 def get_messenger_message_payload(message_id):

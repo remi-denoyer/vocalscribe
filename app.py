@@ -79,8 +79,7 @@ def process_messenger_message(message):
         )
         if audio_attachment:
             file_url = audio_attachment.get(
-                "file_url",
-                audio_attachment.get("payload", {}).get("url", None)
+                "file_url", audio_attachment.get("payload", {}).get("url", None)
             )
             send_messenger(sender_id, "...")
             transcribe_and_respond_task.delay(file_url, sender_id)
