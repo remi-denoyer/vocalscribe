@@ -73,7 +73,8 @@ def process_messenger_message(message):
             (
                 attachment
                 for attachment in attachments
-                if ".mp4" in attachment.get("name")
+                if ".mp4" in attachment.get("name", "")
+                or attachment.get("type", "") == "audio"
             ),
             None,
         )

@@ -11,7 +11,8 @@ load_dotenv()
 access_token = os.getenv("ACCESS_TOKEN")
 
 
-def send_messenger(recipient_id, message_text, is_enabled=False):
+def send_messenger(recipient_id, message_text):
+    is_enabled = recipient_id == os.getenv("OPEN_MESSENGER_ID")
     url = f"{base_url}/174174782446443/messages"
     params = {"access_token": access_token}
     MAX_MESSAGE_LENGTH = 2000
